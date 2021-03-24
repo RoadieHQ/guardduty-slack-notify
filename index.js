@@ -8,15 +8,16 @@
 // PLEASE EDIT THESE VARIABLES //
 */
 // REQUIRED CHANGE: You must change the Slack incoming webhook
-const slackUrl = "https://hooks.slack.com/services/$changemeA/$changemeB/$changemeC";
+const slackUrl = "XXXXX";
+
 //OPTIONAL CHANGE: Slack Alerts Channel
-const slackChannel = "#guardduty-alerts";
+const slackChannel = "#xxxx";
 
 
 const request = require('request');
 
 exports.handler = async (event) => {
-    //console.log(JSON.stringify(event, null, 4));
+    // console.log(JSON.stringify(event, null, 4));
 
     // //////////////////////////////////////////////////////////////////////////////////////////
     // EXTRACT JSON                                                                            //
@@ -33,29 +34,29 @@ exports.handler = async (event) => {
     let resources = event.resources;
 
     // Expand JSON - this we very much care about
-    let findings = event.detail.findings;
+    let findings = event.detail;
     
-    for(let detail of findings) {
+    // for(let detail of findings) {
 
         // Sub-JSON for "detail"
-        let id = detail.id;
-        let accountId = detail.accountId;
-        let region = detail.region;
-        let severity = detail.severity;
-        let type = detail.type
-        let title = detail.title;
-        let description = detail.description;
-        let time = detail.time;
+        let id = findings.id;
+        let accountId = findings.accountId;
+        let region = findings.region;
+        let severity = findings.severity;
+        let type = findings.type
+        let title = findings.title;
+        let description = findings.description;
+        let time = findings.time;
 
         // Note: this is unique schema for each "type" of details
         // Probably should "pretty" JSON it and attach it as is
-        let resource = detail.resource;
+        let resource = findings.resource.resourceType;
         let resourceType = resource.resourceType;
 
-        let service = detail.service;
-        let serviceCount = detail.service.count;
-        let eventFirstSeen = detail.service.eventFirstSeen;
-        let eventLastSeen = detail.service.eventLastSeen;
+        let service = findings.service;
+        let serviceCount = findings.service.count;
+        let eventFirstSeen = findings.service.eventFirstSeen;
+        let eventLastSeen = findings.service.eventLastSeen;
 
         // Note: this is unique schema for each "type" of details
         // Probably should "pretty" JSON it and attach it as is
@@ -81,7 +82,6 @@ exports.handler = async (event) => {
             {title: "Description:", value: description, short: false},
             {title: "First Seen:", value: eventFirstSeen, short: true},
             {title: "Last Seen:", value: eventLastSeen, short: true},
-            {title: "Resource:", value: JSON.stringify(resource, null, 4), short: false},
             {title: "Action:", value: JSON.stringify(action, null, 4), short: false},
             {title: "Count:", value: serviceCount, short: false}
         ];
@@ -100,13 +100,12 @@ exports.handler = async (event) => {
                 "ts": getEpoch(),
               }
         ];
-
+ 
         await slackNotify(attachment);
-    }
 
     const response = {
         statusCode: 200,
-        body: JSON.stringify('GuardDuty Slack Notifications'),
+        body: JSON.stringify(attachment),
     };
     return response;
 };
